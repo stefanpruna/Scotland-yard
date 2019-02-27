@@ -19,6 +19,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 	@Override
 	public void registerSpectator(Spectator spectator) {
 		// TODO
+		// Test
 		throw new RuntimeException("Implement me");
 	}
 
