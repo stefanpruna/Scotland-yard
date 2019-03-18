@@ -1,6 +1,8 @@
 package uk.ac.bris.cs.scotlandyard.model;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import uk.ac.bris.cs.gamekit.graph.Graph;
 
@@ -9,6 +11,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
 	private List<Boolean> rounds;
 	private Graph<Integer, Transport> graph;
+	private List<ScotlandYardPlayer> players;
 
 	public ScotlandYardModel(List<Boolean> rounds, Graph<Integer, Transport> graph,
 			PlayerConfiguration mrX, PlayerConfiguration firstDetective,
@@ -46,12 +49,27 @@ public class ScotlandYardModel implements ScotlandYardGame {
 			else colours.add(p.colour);
 
 		// Ticket check.
+		for(PlayerConfiguration p : players)
+			if(p.colour != Colour.BLACK){
+				if(p.tickets.getOrDefault(Ticket.SECRET, -1) != -1 || p.tickets.getOrDefault(Ticket.DOUBLE, -1) != -1)
+					throw new IllegalArgumentException("Detectives have illegal tickets");
+				if(p.tickets.getOrDefault(Ticket.TAXI, 0) == 0 ||
+						p.tickets.getOrDefault(Ticket.BUS, 0) == 0 ||
+						p.tickets.getOrDefault(Ticket.UNDERGROUND, 0) == 0)
+					throw new IllegalArgumentException("Detectives missing tickets");
+			}
+			else
+				if(p.tickets.getOrDefault(Ticket.SECRET, 0) == 0|| p.tickets.getOrDefault(Ticket.DOUBLE, 0) == 0)
+					throw new IllegalArgumentException("MrX missing tickets");
+
+		this.players = new ArrayList<>();
+		for(PlayerConfiguration p : players)
+       		this.players.add(new ScotlandYardPlayer(p.player, p.colour, p.location, p.tickets));
 	}
 
 	@Override
 	public void registerSpectator(Spectator spectator) {
 		// TODO
-		// Test
 		throw new RuntimeException("Implement me");
 	}
 
