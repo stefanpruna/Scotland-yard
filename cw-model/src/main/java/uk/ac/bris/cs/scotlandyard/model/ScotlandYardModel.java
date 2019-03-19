@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.List;
 
 import uk.ac.bris.cs.gamekit.graph.Graph;
+import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
 // TODO implement all methods and pass all tests
 public class ScotlandYardModel implements ScotlandYardGame {
@@ -32,8 +33,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
 		// Adding all players to a list.
 		ArrayList<PlayerConfiguration> players = new ArrayList<>(Arrays.asList(restOfTheDetectives)); // players is constructed with all elements of restOfDetectives
-		players.add(firstDetective);
-		players.add(mrX);
+		players.add(0, firstDetective);
+		players.add(0, mrX);
 
 		// Duplicate location or colour check.
 		HashSet<Integer> locations = new HashSet<>();
@@ -49,18 +50,19 @@ public class ScotlandYardModel implements ScotlandYardGame {
 			else colours.add(p.colour);
 
 		// Ticket check.
-		for(PlayerConfiguration p : players)
+
+		for(PlayerConfiguration p : players){
+			if(p.tickets.getOrDefault(Ticket.TAXI, 0) == 0 ||
+					p.tickets.getOrDefault(Ticket.BUS, 0) == 0 ||
+					p.tickets.getOrDefault(Ticket.UNDERGROUND, 0) == 0)
+				throw new IllegalArgumentException("Player missing tickets");
 			if(p.colour != Colour.BLACK){
-				if(p.tickets.getOrDefault(Ticket.SECRET, -1) != -1 || p.tickets.getOrDefault(Ticket.DOUBLE, -1) != -1)
+				if(p.tickets.getOrDefault(Ticket.SECRET, 0) != 0 || p.tickets.getOrDefault(Ticket.DOUBLE, 0) != 0)
 					throw new IllegalArgumentException("Detectives have illegal tickets");
-				if(p.tickets.getOrDefault(Ticket.TAXI, 0) == 0 ||
-						p.tickets.getOrDefault(Ticket.BUS, 0) == 0 ||
-						p.tickets.getOrDefault(Ticket.UNDERGROUND, 0) == 0)
-					throw new IllegalArgumentException("Detectives missing tickets");
 			}
-			else
-				if(p.tickets.getOrDefault(Ticket.SECRET, 0) == 0|| p.tickets.getOrDefault(Ticket.DOUBLE, 0) == 0)
-					throw new IllegalArgumentException("MrX missing tickets");
+			else if(p.tickets.getOrDefault(Ticket.SECRET, 0) == 0 || p.tickets.getOrDefault(Ticket.DOUBLE, 0) == 0)
+				throw new IllegalArgumentException("MrX missing tickets");
+		}
 
 		this.players = new ArrayList<>();
 		for(PlayerConfiguration p : players)
@@ -81,8 +83,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
 	@Override
 	public void startRotate() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		//
 	}
 
 	@Override
@@ -93,56 +94,66 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
 	@Override
 	public List<Colour> getPlayers() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		List<Colour> playerColours = new ArrayList<>();
+		for(ScotlandYardPlayer p : players)
+			playerColours.add(p.colour());
+		return Collections.unmodifiableList(playerColours);
 	}
 
 	@Override
 	public Set<Colour> getWinningPlayers() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		HashSet<Colour> set = new HashSet<>();
+		return Collections.unmodifiableSet(set);
 	}
 
 	@Override
 	public Optional<Integer> getPlayerLocation(Colour colour) {
-		// TODO
-		throw new RuntimeException("Implement me");
+		for(ScotlandYardPlayer p : players){
+			if(p.colour() == colour){
+				if(p.colour() == Colour.BLACK && !rounds.get(getCurrentRound()))
+					return Optional.of(0);
+				return Optional.of(p.location());
+			}
+		}
+		return Optional.empty();
 	}
 
 	@Override
 	public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket) {
-		// TODO
-		throw new RuntimeException("Implement me");
+		for(ScotlandYardPlayer p : players){
+			if(p.colour() == colour)
+				return Optional.of(p.tickets().get(ticket));
+		}
+		return Optional.empty();
 	}
 
 	@Override
 	public boolean isGameOver() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		// Start of game
+		if(getCurrentRound() == 0) return false;
+
+		return true;
 	}
 
 	@Override
 	public Colour getCurrentPlayer() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		return Colour.BLACK;
 	}
 
 	@Override
 	public int getCurrentRound() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		return 0;
 	}
 
 	@Override
 	public List<Boolean> getRounds() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		return Collections.unmodifiableList(rounds);
 	}
 
 	@Override
 	public Graph<Integer, Transport> getGraph() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		ImmutableGraph<Integer, Transport> g = new ImmutableGraph<>(graph);
+		return g;
 	}
 
 }
