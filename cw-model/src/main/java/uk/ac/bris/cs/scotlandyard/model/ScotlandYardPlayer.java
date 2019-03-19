@@ -1,12 +1,13 @@
 package uk.ac.bris.cs.scotlandyard.model;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
  * A class that contains all the information about a particular player.
  */
-public class ScotlandYardPlayer {
+public class ScotlandYardPlayer implements  MoveVisitor {
 
 	private final Player player;
 	private final Colour colour;
@@ -16,7 +17,7 @@ public class ScotlandYardPlayer {
 	/**
 	 * Constructs a new ScotlandYardPlayer object.
 	 *
-	 * @param player the Player object associated with the player.
+	 * @param player the Playesr object associated with the player.
 	 * @param colour the colour of the player.
 	 * @param location the location of the player.
 	 * @param tickets the tickets associated with the player.
@@ -141,5 +142,36 @@ public class ScotlandYardPlayer {
 		sb.append(", tickets=").append(tickets);
 		sb.append('}');
 		return sb.toString();
+	}
+
+	/**
+	 * Called when visiting a pass move
+	 *
+	 * @param move the move; never null
+	 */
+	public void visit(PassMove move) {
+
+	}
+
+	/**
+	 * Called when visiting a ticket move
+	 *
+	 * @param move the move; never null
+	 */
+	public void visit(TicketMove move) {
+		this.location = move.destination();
+		this.removeTicket(move.ticket());
+	}
+
+	/**
+	 * Called when visiting a double move
+	 *
+	 * @param move the move; never null
+	 */
+	public void visit(DoubleMove move) {
+		this.removeTicket(Ticket.DOUBLE);
+		this.removeTicket(move.firstMove().ticket());
+		this.removeTicket(move.secondMove().ticket());
+		this.location(move.secondMove().destination());
 	}
 }
