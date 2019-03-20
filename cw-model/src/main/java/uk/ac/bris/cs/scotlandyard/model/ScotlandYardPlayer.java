@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * A class that contains all the information about a particular player.
  */
-public class ScotlandYardPlayer implements  MoveVisitor {
+public class ScotlandYardPlayer {
 
 	private final Player player;
 	private final Colour colour;
@@ -17,13 +17,13 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	/**
 	 * Constructs a new ScotlandYardPlayer object.
 	 *
-	 * @param player the Playesr object associated with the player.
-	 * @param colour the colour of the player.
+	 * @param player   the Playesr object associated with the player.
+	 * @param colour   the colour of the player.
 	 * @param location the location of the player.
-	 * @param tickets the tickets associated with the player.
+	 * @param tickets  the tickets associated with the player.
 	 */
 	public ScotlandYardPlayer(Player player, Colour colour, int location,
-			Map<Ticket, Integer> tickets) {
+							  Map<Ticket, Integer> tickets){
 		this.player = player;
 		this.colour = colour;
 		this.location = location;
@@ -33,14 +33,14 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	/**
 	 * @return the Player of the player.
 	 */
-	public Player player() {
+	public Player player(){
 		return player;
 	}
 
 	/**
 	 * @return the colour of the player
 	 */
-	public Colour colour() {
+	public Colour colour(){
 		return colour;
 	}
 
@@ -49,7 +49,7 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	 *
 	 * @return true if player is MrX, false otherwise
 	 */
-	public boolean isMrX() {
+	public boolean isMrX(){
 		return colour.isMrX();
 	}
 
@@ -58,7 +58,7 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	 *
 	 * @return true if player is a detective, false otherwise
 	 */
-	public boolean isDetective() {
+	public boolean isDetective(){
 		return colour.isDetective();
 	}
 
@@ -67,21 +67,21 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	 *
 	 * @param location the location to set
 	 */
-	public void location(int location) {
+	public void location(int location){
 		this.location = location;
 	}
 
 	/**
 	 * @return the player's current location.
 	 */
-	public int location() {
+	public int location(){
 		return location;
 	}
 
 	/**
 	 * @return the player's current tickets.
 	 */
-	public Map<Ticket, Integer> tickets() {
+	public Map<Ticket, Integer> tickets(){
 		return tickets;
 	}
 
@@ -90,7 +90,7 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	 *
 	 * @param ticket the ticket to be added.
 	 */
-	public void addTicket(Ticket ticket) {
+	public void addTicket(Ticket ticket){
 		adjustTicketCount(ticket, 1);
 	}
 
@@ -99,11 +99,11 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	 *
 	 * @param ticket the ticket to be removed.
 	 */
-	public void removeTicket(Ticket ticket) {
+	public void removeTicket(Ticket ticket){
 		adjustTicketCount(ticket, -1);
 	}
 
-	private void adjustTicketCount(Ticket ticket, int by) {
+	private void adjustTicketCount(Ticket ticket, int by){
 		Integer ticketCount = tickets.get(ticket);
 		ticketCount += by;
 		tickets.remove(ticket);
@@ -116,25 +116,25 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 	 * @param ticket the ticket to check for; not null
 	 * @return true if the player has the given ticket, false otherwise
 	 */
-	public boolean hasTickets(Ticket ticket) {
+	public boolean hasTickets(Ticket ticket){
 		return tickets.get(ticket) != 0;
 	}
 
 	/**
 	 * Checks whether the player has the given ticket and quantity
 	 *
-	 * @param ticket the ticket to check for; not null
+	 * @param ticket            the ticket to check for; not null
 	 * @param quantityInclusive whether the ticket count is greater than or
-	 *        equal to given quantity
+	 *                          equal to given quantity
 	 * @return true if the player has the quantity of the given ticket, false
-	 *         otherwise
+	 * otherwise
 	 */
-	public boolean hasTickets(Ticket ticket, int quantityInclusive) {
+	public boolean hasTickets(Ticket ticket, int quantityInclusive){
 		return tickets.get(ticket) >= quantityInclusive;
 	}
 
 	@Override
-	public String toString() {
+	public String toString(){
 		final StringBuilder sb = new StringBuilder("ScotlandYardPlayer{");
 		sb.append("player=").append(player);
 		sb.append(", colour=").append(colour);
@@ -142,36 +142,5 @@ public class ScotlandYardPlayer implements  MoveVisitor {
 		sb.append(", tickets=").append(tickets);
 		sb.append('}');
 		return sb.toString();
-	}
-
-	/**
-	 * Called when visiting a pass move
-	 *
-	 * @param move the move; never null
-	 */
-	public void visit(PassMove move) {
-
-	}
-
-	/**
-	 * Called when visiting a ticket move
-	 *
-	 * @param move the move; never null
-	 */
-	public void visit(TicketMove move) {
-		this.location = move.destination();
-		this.removeTicket(move.ticket());
-	}
-
-	/**
-	 * Called when visiting a double move
-	 *
-	 * @param move the move; never null
-	 */
-	public void visit(DoubleMove move) {
-		this.removeTicket(Ticket.DOUBLE);
-		this.removeTicket(move.firstMove().ticket());
-		this.removeTicket(move.secondMove().ticket());
-		this.location(move.secondMove().destination());
 	}
 }

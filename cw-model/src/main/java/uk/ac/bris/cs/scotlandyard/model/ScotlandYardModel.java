@@ -110,18 +110,11 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 
 		this.player = (this.player + 1) % players.size();
 
-		m.visit(player);
 		m.visit(this);
 
 		// if we are at the last player (plus one'd before), we called makeRotate for all players, so don't.
-		if(this.player != 0){
+		if(this.player != 0 && !isGameOver())
 			startRotate();
-			if(isGameOver()){
-				for(Spectator s : spectators)
-					s.onGameOver(this, getWinningPlayers());
-				spectators.clear();
-			}
-		}
 	}
 
 	private boolean isLocationBusy(Colour c, Integer l){
@@ -167,9 +160,12 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 		for(Spectator s : spectators){
 			if(player == 1)
 				s.onRoundStarted(this, round);
+
 			s.onMoveMade(this, move);
 			if(player == 0 && !isGameOver())
 				s.onRotationComplete(this);
+			else if(isGameOver())
+				s.onGameOver(this, getWinningPlayers());
 		}
 	}
 
@@ -181,6 +177,9 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 	}
 
 	public void visit(TicketMove move) {
+		getPlayerFromMove(move).removeTicket(move.ticket());
+		getPlayerFromMove(move).location(move.destination());
+
 		if(move.colour() != Colour.BLACK)
 			players.get(0).addTicket(move.ticket());
 
@@ -194,43 +193,60 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 		for(Spectator s : spectators){
 			if(player == 1)
 				s.onRoundStarted(this, round);
-			s.onMoveMade(this, newMove);
-		}
 
-		if(player == 0 && !isGameOver())
-			for(Spectator s : spectators)
+			s.onMoveMade(this, newMove);
+
+			if(player == 0 && !isGameOver())
 				s.onRotationComplete(this);
+			else if(isGameOver())
+				s.onGameOver(this, getWinningPlayers());
+		}
 	}
 
 	public void visit(DoubleMove move) {
-		DoubleMove newMove = move;
-		TicketMove first = move.firstMove(), second = move.secondMove();
-		if(!rounds.get(round)) first = new TicketMove(move.firstMove().colour(), move.firstMove().ticket(), 0);
-		if(!rounds.get(round + 1)) second = new TicketMove(move.secondMove().colour(), move.secondMove().ticket(), 0);
-		if(rounds.get(round) && !rounds.get(round + 1)) second = new TicketMove(move.secondMove().colour(), move.secondMove().ticket(), first.destination());
-		newMove = new DoubleMove(move.colour(), first, second);
 
+		TicketMove first = move.firstMove(), second = move.secondMove();
+		if(!rounds.get(round)) first = new TicketMove(move.firstMove().colour(), move.firstMove().ticket(), lastBlackLocation);
+		if(!rounds.get(round + 1)) second = new TicketMove(move.secondMove().colour(), move.secondMove().ticket(), lastBlackLocation);
+		if(rounds.get(round) && !rounds.get(round + 1))
+			second = new TicketMove(move.secondMove().colour(), move.secondMove().ticket(), first.destination());
+
+		DoubleMove newMove = new DoubleMove(move.colour(), first, second);
+
+
+		players.get(0).removeTicket(Ticket.DOUBLE);
 		for(Spectator s : spectators)
 			s.onMoveMade(this, newMove);
 
-		if(move.colour() == Colour.BLACK && round < rounds.size())
+		players.get(0).removeTicket(move.firstMove().ticket());
+		players.get(0).location(move.firstMove().destination());
+
+		if(round < rounds.size())
 			round++;
 
 		for(Spectator s : spectators){
-			if(player == 1)
-				s.onRoundStarted(this, round);
+			s.onRoundStarted(this, round);
 			s.onMoveMade(this, newMove.firstMove());
 		}
 
-		if(move.colour() == Colour.BLACK && round < rounds.size())
+		if(rounds.get(round - 1))
+			lastBlackLocation = players.get(0).location();
+
+		players.get(0).removeTicket(move.secondMove().ticket());
+		players.get(0).location(move.finalDestination());
+
+		if(round < rounds.size())
 			round++;
 
 		for(Spectator s : spectators){
-			if(player == 1)
-				s.onRoundStarted(this, round);
+
+			s.onRoundStarted(this, round);
 			s.onMoveMade(this, newMove.secondMove());
+
 			if(player == 0 && !isGameOver())
 				s.onRotationComplete(this);
+			else if(isGameOver())
+				s.onGameOver(this, getWinningPlayers());
 		}
 	}
 
@@ -291,7 +307,7 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 				captured = true;
 
 		// MrX win
-		if(detectivesStuck || round == rounds.size())
+		if(detectivesStuck || (round == rounds.size() && player == 0))
 			set.add(Colour.BLACK);
 		// Detectives win
 		else if(getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK)) || captured)
@@ -326,11 +342,14 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 	@Override
 	public boolean isGameOver() {
 		// Last round
-		if(round == rounds.size())
+		if(round == rounds.size() && player == 0){
 			return true;
+		}
 
 		// MrX Cannot move
-		if(getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK))) return true;
+		if(getCurrentPlayer() == Colour.BLACK && getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK))){
+			return true;
+		}
 
 		// Detectives stuck
 		boolean detectivesStuck = true;
@@ -338,12 +357,15 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 			if(p.isDetective() && !getValidMovesForPlayer(p).contains(new PassMove(p.colour())))
 				detectivesStuck = false;
 		}
-		if(detectivesStuck) return true;
+		if(detectivesStuck){
+			return true;
+		}
 
 		// Captured
 		for(ScotlandYardPlayer p : players)
-			if(!p.isMrX() && p.location() == players.get(0).location())
+			if(!p.isMrX() && p.location() == players.get(0).location()){
 				return true;
+			}
 
 		return false;
 	}
