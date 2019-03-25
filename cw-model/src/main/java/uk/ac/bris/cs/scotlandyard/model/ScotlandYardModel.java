@@ -260,8 +260,11 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 	private HashSet<Move> getValidMovesForPlayer(ScotlandYardPlayer p){
 		HashSet<Move> moves = new HashSet<>();
 
+		// Make a HashSet for all valid simple moves
 		HashSet<TicketMove> simpleMoves = getMovesFromPlayerLocation(p);
 		moves.addAll(simpleMoves);
+
+		// If player has a double ticket, add all double moves
 		if(p.tickets().getOrDefault(Ticket.DOUBLE, 0) > 0 && round + 1 < rounds.size())
 			moves.addAll(getDoubleMovesFromPlayerLocation(simpleMoves, p));
 
