@@ -117,6 +117,7 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 			startRotate();
 	}
 
+	// Iterates players and checks overlapping locations.
 	private boolean isLocationBusy(Colour c, Integer l){
 		for(ScotlandYardPlayer p : players)
 			if(p.location() == l && p.colour() != c && p.colour() != Colour.BLACK)
@@ -128,8 +129,10 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 		HashSet<TicketMove> moves = new HashSet<>();
 		for(Edge<Integer, Transport> e : graph.getEdgesFrom(graph.getNode(p.location()))){
 			if(!isLocationBusy(p.colour(), e.destination().value())){
+				// Checks for normal ticket moves
 				if(p.tickets().get(Ticket.fromTransport(e.data())) > 0)
 					moves.add(new TicketMove(p.colour(), Ticket.fromTransport(e.data()), e.destination().value()));
+				// Checks for secret ticket move
 				if(p.tickets().get(Ticket.SECRET) > 0)
 					moves.add(new TicketMove(p.colour(), Ticket.SECRET, e.destination().value()));
 			}
@@ -143,9 +146,13 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 			for(Edge<Integer, Transport> e : graph.getEdgesFrom(graph.getNode(m.destination()))){
 				if(!isLocationBusy(p.colour(), e.destination().value())){
 					int c = 0;
-					if(Ticket.fromTransport(e.data()) == m.ticket()) c = 1;
+					// If using the same ticket, player must have at least 2
+					if(Ticket.fromTransport(e.data()) == m.ticket())
+						c = 1;
+					// Checks for normal double moves
 					if(p.tickets().get(Ticket.fromTransport(e.data())) > c)
 						moves.add(new DoubleMove(p.colour(), m, new TicketMove(p.colour(), Ticket.fromTransport(e.data()), e.destination().value())));
+					// Checks for double moves containing secret tickets
 					if(p.tickets().get(Ticket.SECRET) > 0)
 						moves.add(new DoubleMove(p.colour(), m, new TicketMove(p.colour(), Ticket.SECRET, e.destination().value())));
 				}
@@ -298,10 +305,12 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 		HashSet<Colour> set = new HashSet<>();
 		boolean detectivesStuck = true, captured = false;
 
+		// Check for detectives being stuck
 		for(ScotlandYardPlayer p : players)
 			if(p.isDetective() && !getValidMovesForPlayer(p).contains(new PassMove(p.colour())))
 				detectivesStuck = false;
 
+		// Check for MrX capture
 		for(ScotlandYardPlayer p : players)
 			if(!p.isMrX() && p.location() == players.get(0).location())
 				captured = true;
@@ -342,30 +351,25 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 	@Override
 	public boolean isGameOver() {
 		// Last round
-		if(round == rounds.size() && player == 0){
+		if(round == rounds.size() && player == 0)
 			return true;
-		}
 
 		// MrX Cannot move
-		if(getCurrentPlayer() == Colour.BLACK && getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK))){
+		if(getCurrentPlayer() == Colour.BLACK && getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK)))
 			return true;
-		}
 
 		// Detectives stuck
 		boolean detectivesStuck = true;
-		for(ScotlandYardPlayer p : players){
+		for(ScotlandYardPlayer p : players)
 			if(p.isDetective() && !getValidMovesForPlayer(p).contains(new PassMove(p.colour())))
 				detectivesStuck = false;
-		}
-		if(detectivesStuck){
+		if(detectivesStuck)
 			return true;
-		}
 
 		// Captured
 		for(ScotlandYardPlayer p : players)
-			if(!p.isMrX() && p.location() == players.get(0).location()){
+			if(!p.isMrX() && p.location() == players.get(0).location())
 				return true;
-			}
 
 		return false;
 	}
