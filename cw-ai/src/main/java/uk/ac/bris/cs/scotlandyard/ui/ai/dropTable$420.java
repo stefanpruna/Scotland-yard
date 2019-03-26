@@ -25,6 +25,11 @@ public class dropTable$420 implements PlayerFactory {
 			if(currentScore > maxScore){
 				maxScore = currentScore;
 				move = m;
+
+				List<ScotlandYardAIPlayer> playerList = new LinkedList<>(model.getPlayers());
+				playerList.remove(0);
+				BFS bfsFromDetectives = new BFS(model.getGraph(), playerList, model.getPlayers().get(0).location());
+				System.out.println(bfsFromDetectives.getMinimumDistance());
 			}
 		}
 
@@ -40,37 +45,28 @@ public class dropTable$420 implements PlayerFactory {
 		//TODO normalizare
 		availableMoveScore = moves.size();
 
+		List<ScotlandYardAIPlayer> playerList = new LinkedList<>(model.getPlayers());
+		playerList.remove(0);
+		BFS bfsFromDetectives = new BFS(model.getGraph(), playerList, model.getPlayers().get(0).location());
 
-		double score = availableMoveScore * 100;
+		double distanceScoreAvg = bfsFromDetectives.getAverageDistance();
+		double distanceScoreMin = bfsFromDetectives.getMinimumDistance();
+
+
+		double score = availableMoveScore * 30 + distanceScoreAvg * 10 + distanceScoreMin * 60;
 
 		return score;
 	}
 
-	private int[] runDijkstraFomPlayer(ScotlandYardAIModel model, Colour colour){
-		Graph<Integer, Transport> g = model.getGraph();
 
-		//nodeQueue.push(start);
-		while(nodeQueue.size() != 0){
-			int node = nodeQueue.remove();
-			for(Edge<Integer, Transport> e : g.getEdgesFrom(g.getNode(node))){
-
-			}
-		}
-		return null;
-	}
-
-
-	// TODO create a new player here
 	@Override
 	public Player createPlayer(Colour colour) {
 		return new MyPlayer();
 	}
 
-	// TODO A sample player that selects a random move
 	private static class MyPlayer implements Player {
 
 		private final Random random = new Random();
-
 
 		@Override
 		public void makeMove(ScotlandYardView view, int location, Set<Move> moves, Consumer<Move> callback) {

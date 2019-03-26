@@ -105,11 +105,8 @@ class ScotlandYardAIModel{
         return moves;
     }
 
-    public List<Colour> getPlayers(){
-        List<Colour> playerColours = new ArrayList<>();
-        for(ScotlandYardAIPlayer p : players)
-            playerColours.add(p.colour());
-        return Collections.unmodifiableList(playerColours);
+    public List<ScotlandYardAIPlayer> getPlayers(){
+        return Collections.unmodifiableList(players);
     }
 
     public Set<Colour> getWinningPlayers(){
