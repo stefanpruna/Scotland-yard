@@ -9,6 +9,12 @@ public class ScotlandYardAIPlayer implements MoveVisitor{
     private int location;
     private HashMap<Ticket, Integer> tickets;
 
+    public ScotlandYardAIPlayer(ScotlandYardAIPlayer player){
+        colour = player.colour();
+        location = player.location();
+        tickets = new HashMap<>(player.tickets());
+    }
+
     public ScotlandYardAIPlayer(Colour c, int location, HashMap<Ticket, Integer> tickets){
         colour = c;
         this.location = location;
@@ -53,12 +59,12 @@ public class ScotlandYardAIPlayer implements MoveVisitor{
         return tickets;
     }
 
-    private void removeTicket(Ticket t){
+    public void removeTicket(Ticket t){
         int initialTickets = tickets.get(t);
         tickets.replace(t, initialTickets - 1);
     }
 
-    private void addTicket(Ticket t){
+    public void addTicket(Ticket t){
         int initialTickets = tickets.getOrDefault(t, 0);
         if(tickets.containsKey(t))
             tickets.replace(t, initialTickets + 1);

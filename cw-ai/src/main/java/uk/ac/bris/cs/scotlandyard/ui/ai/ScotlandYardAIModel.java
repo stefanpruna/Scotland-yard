@@ -9,7 +9,7 @@ import uk.ac.bris.cs.scotlandyard.model.*;
 
 import java.util.*;
 
-class ScotlandYardAIModel{
+class ScotlandYardAIModel implements  MoveVisitor{
 
     private int round = 0;
     private int currentPlayerNumber = 0;
@@ -18,6 +18,17 @@ class ScotlandYardAIModel{
     // Immutable:
     private Graph<Integer, Transport> graph;
     private List<Boolean> rounds;
+
+    public ScotlandYardAIModel(ScotlandYardAIModel model){
+        round = model.getCurrentRound();
+        currentPlayerNumber = model.getCurrentPlayerNumber();
+
+        for(ScotlandYardAIPlayer p : model.getPlayers())
+            players.add(new ScotlandYardAIPlayer(p));
+
+        graph = model.getGraph();
+        rounds = model.getRounds();
+    }
 
     public ScotlandYardAIModel(ScotlandYardView view){
         graph = view.getGraph();
@@ -40,6 +51,32 @@ class ScotlandYardAIModel{
             ticketMap.put(Ticket.UNDERGROUND, view.getPlayerTickets(c, Ticket.UNDERGROUND).get());
 
             players.add(new ScotlandYardAIPlayer(c, view.getPlayerLocation(c).get(), ticketMap));
+        }
+    }
+
+    public ScotlandYardAIModel(ScotlandYardView view, int location){
+        graph = view.getGraph();
+        rounds = view.getRounds();
+        round = view.getCurrentRound();
+
+        for(Colour c : view.getPlayers()){
+            if(c == view.getCurrentPlayer())
+                break;
+            currentPlayerNumber++;
+        }
+
+        for(Colour c : view.getPlayers()){
+            HashMap<Ticket, Integer> ticketMap = new HashMap<>();
+
+            ticketMap.put(Ticket.SECRET, view.getPlayerTickets(c, Ticket.SECRET).get());
+            ticketMap.put(Ticket.DOUBLE, view.getPlayerTickets(c, Ticket.DOUBLE).get());
+            ticketMap.put(Ticket.TAXI, view.getPlayerTickets(c, Ticket.TAXI).get());
+            ticketMap.put(Ticket.BUS, view.getPlayerTickets(c, Ticket.BUS).get());
+            ticketMap.put(Ticket.UNDERGROUND, view.getPlayerTickets(c, Ticket.UNDERGROUND).get());
+
+            if(c != Colour.BLACK)
+                players.add(new ScotlandYardAIPlayer(c, view.getPlayerLocation(c).get(), ticketMap));
+            else players.add(new ScotlandYardAIPlayer(c, location, ticketMap));
         }
     }
 
@@ -176,6 +213,10 @@ class ScotlandYardAIModel{
         return players.get(currentPlayerNumber);
     }
 
+    public int getCurrentPlayerNumber(){
+        return currentPlayerNumber;
+    }
+
     public int getCurrentRound(){
         return round;
     }
@@ -194,5 +235,27 @@ class ScotlandYardAIModel{
             if(p.location() == l && p.colour() != c && p.colour() != Colour.BLACK)
                 return true;
         return false;
+    }
+
+    @Override
+    public void visit(PassMove move){
+    }
+
+    @Override
+    public void visit(DoubleMove move){
+        incrementCurrentPlayer();
+        incrementRound();
+    }
+
+    @Override
+    public void visit(TicketMove move){
+        if(currentPlayerNumber == 0){
+            incrementRound();
+            incrementCurrentPlayer();
+        }
+        else{
+            players.get(0).addTicket(move.ticket());
+            incrementCurrentPlayer();
+        }
     }
 }
