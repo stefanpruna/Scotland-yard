@@ -4,7 +4,8 @@ import uk.ac.bris.cs.scotlandyard.model.Ticket;
 
 public class BFSNode{
 
-    private int distance = 0, taxi, bus, underground;
+    private byte distance = 0;
+    int taxi = 0, bus = 0, underground = 0;
     private boolean visited = false;
 
     public BFSNode(){
@@ -21,7 +22,7 @@ public class BFSNode{
 
     public BFSNode(BFSNode oldNode, Ticket transport){
         visited = true;
-        distance = oldNode.distance() + 1;
+        distance = (byte) (oldNode.distance() + 1);
         taxi = oldNode.getTickets(Ticket.TAXI);
         bus = oldNode.getTickets(Ticket.BUS);
         underground = oldNode.getTickets(Ticket.UNDERGROUND);

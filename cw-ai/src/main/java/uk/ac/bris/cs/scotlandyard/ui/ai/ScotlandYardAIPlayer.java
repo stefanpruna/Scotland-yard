@@ -15,6 +15,28 @@ public class ScotlandYardAIPlayer implements MoveVisitor{
         this.tickets = tickets;
     }
 
+    public ScotlandYardAIPlayer(int location, int taxi, int bus, int underground){
+        colour = Colour.WHITE;
+        this.location = location;
+        HashMap<Ticket, Integer> tickets = new HashMap<>();
+        tickets.put(Ticket.TAXI, taxi);
+        tickets.put(Ticket.BUS, bus);
+        tickets.put(Ticket.UNDERGROUND, underground);
+        this.tickets = tickets;
+    }
+
+    public ScotlandYardAIPlayer(int location, int taxi, int bus, int underground, int doublet, int secret){
+        colour = Colour.WHITE;
+        this.location = location;
+        HashMap<Ticket, Integer> tickets = new HashMap<>();
+        tickets.put(Ticket.TAXI, taxi);
+        tickets.put(Ticket.BUS, bus);
+        tickets.put(Ticket.UNDERGROUND, underground);
+        tickets.put(Ticket.DOUBLE, doublet);
+        tickets.put(Ticket.SECRET, secret);
+        this.tickets = tickets;
+    }
+
     public void setLocation(int l){
         location = l;
     }

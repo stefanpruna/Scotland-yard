@@ -7,17 +7,13 @@ import uk.ac.bris.cs.gamekit.graph.Node;
 import uk.ac.bris.cs.scotlandyard.model.Ticket;
 import uk.ac.bris.cs.scotlandyard.model.Transport;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class BFS{
+    private BFSNode[][][][][] distances = new BFSNode[200][200][12][9][5];
 
-    private Graph<Integer, Transport> graph;
-    private List<Integer> distances = new ArrayList<>();
-
-    public BFS(Graph<Integer, Transport> graph, List<ScotlandYardAIPlayer> players, Integer mrXLocation){
-
+    public BFS(Graph<Integer, Transport> graph, List<ScotlandYardAIPlayer> players){
 
         for(ScotlandYardAIPlayer p : players){
 
@@ -36,7 +32,7 @@ public class BFS{
 
             while(queue.size() != 0){
 
-                Pair<Integer, BFSNode> frontQueue = queue.remove();
+                Pair<Integer, BFSNode> frontQueue = queue.removeFirst();
 
                 Node<Integer> node = graph.getNode(frontQueue.getKey());
 
@@ -47,39 +43,22 @@ public class BFS{
                     ){
 
                         distance[e.destination().value()] = new BFSNode(frontQueue.getValue(), Ticket.fromTransport(e.data()));
-                        queue.push(new Pair<Integer, BFSNode>(
+                        queue.addLast(new Pair<Integer, BFSNode>(
                                             e.destination().value(),
                                              distance[e.destination().value()])
                         );
-
-                        if(e.destination().value() == mrXLocation)
-                            queue.clear();
-
                     }
                 }
             }
-
-            distances.add(distance[mrXLocation].distance());
-
+            for(int i = 1; i < 200; i++)
+                distances[p.location()][i]
+                        [p.tickets().getOrDefault(Ticket.TAXI, 0)]
+                        [p.tickets().getOrDefault(Ticket.BUS, 0)]
+                        [p.tickets().getOrDefault(Ticket.UNDERGROUND, 0)] = distance[i];
         }
     }
 
-    public List<Integer> getDistances(){
+    public BFSNode[][][][][] getDistances(){
         return distances;
     }
-
-    public int getMinimumDistance(){
-        int minDistance = 1000;
-        for(Integer i : distances)
-            minDistance = Integer.min(minDistance, i);
-        return minDistance;
-    }
-
-    public double getAverageDistance(){
-        double sum = 0;
-        for(Integer i : distances)
-            sum += i;
-        return sum/ distances.size();
-    }
-
 }
