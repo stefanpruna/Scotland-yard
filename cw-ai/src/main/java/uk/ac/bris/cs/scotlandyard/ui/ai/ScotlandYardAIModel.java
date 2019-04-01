@@ -1,10 +1,7 @@
 package uk.ac.bris.cs.scotlandyard.ui.ai;
 
-
-import com.google.common.collect.ImmutableMap;
 import uk.ac.bris.cs.gamekit.graph.Edge;
 import uk.ac.bris.cs.gamekit.graph.Graph;
-import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 import uk.ac.bris.cs.scotlandyard.model.*;
 
 import java.util.*;
@@ -143,7 +140,7 @@ class ScotlandYardAIModel implements  MoveVisitor{
     }
 
     public List<ScotlandYardAIPlayer> getPlayers(){
-        return Collections.unmodifiableList(players);
+        return players;
     }
 
     public Set<Colour> getWinningPlayers(){
@@ -222,12 +219,11 @@ class ScotlandYardAIModel implements  MoveVisitor{
     }
 
     public List<Boolean> getRounds() {
-        return Collections.unmodifiableList(rounds);
+        return rounds;
     }
 
     public Graph<Integer, Transport> getGraph() {
-        ImmutableGraph<Integer, Transport> g = new ImmutableGraph<>(graph);
-        return g;
+        return graph;
     }
 
     boolean isLocationBusy(Colour c, Integer l){

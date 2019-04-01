@@ -61,7 +61,8 @@ public class ScotlandYardAIPlayer implements MoveVisitor{
 
     public void removeTicket(Ticket t){
         int initialTickets = tickets.get(t);
-        tickets.replace(t, initialTickets - 1);
+        if(initialTickets != 0)
+            tickets.replace(t, initialTickets - 1);
     }
 
     public void addTicket(Ticket t){

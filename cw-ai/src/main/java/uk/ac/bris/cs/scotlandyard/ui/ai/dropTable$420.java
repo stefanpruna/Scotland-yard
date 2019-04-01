@@ -12,7 +12,7 @@ import uk.ac.bris.cs.scotlandyard.model.*;
 public class dropTable$420 implements PlayerFactory {
 
 	private static final boolean generateFile = false;
-	private static final int maxDepth = 3;
+	private static final int maxDepth = 2;
 
 	private Cache cache = null;
 
@@ -21,8 +21,8 @@ public class dropTable$420 implements PlayerFactory {
 
 		// Valid moves scoreModel
 		// Normalized to a maximum of 100. 364 is the maximum from the valid moves table.
-		availableMoveScore =  ((double) cache.getValidMoves(model.getCurrentPlayer().location(), model.getCurrentPlayer().tickets())) / 364 * 100;
-
+		//availableMoveScore =  ((double) cache.getValidMoves(model.getCurrentPlayer().location(), model.getCurrentPlayer().tickets())) / 364 * 100;
+		availableMoveScore = (double) model.getValidMovesForPlayer(model.getCurrentPlayer()).size() / 364 * 100;
 
 		// Distance calculations
 		List<ScotlandYardAIPlayer> playerList = new LinkedList<>(model.getPlayers());
@@ -38,8 +38,7 @@ public class dropTable$420 implements PlayerFactory {
 
 		// Normalized to 100, the maximum distance in the table is 16.
 		distanceScoreAvg = avgDistance / 16 * 100;
-		distanceScoreMin = 100/Math.pow(2, minDistance);
-
+		distanceScoreMin = 800 / (minDistance + 1);
 
 		double score = availableMoveScore * 20 + distanceScoreAvg * 20 - distanceScoreMin * 60;
 
@@ -47,16 +46,15 @@ public class dropTable$420 implements PlayerFactory {
 	}
 
 	private Pair<Double, Move> chooseMove(ScotlandYardAIModel node){
-		double maxScore = Double.MIN_VALUE, currentScore;
+		double maxScore = -100000.0, currentScore;
 		Move bestMove = null;
 		ScotlandYardAIModel model;
 
-		System.out.println(node.getCurrentPlayerNumber());
 		for(Move m : node.getValidMovesForPlayer(node.getCurrentPlayer())){
 			model = new ScotlandYardAIModel(node);
 			m.visit(model.getCurrentPlayer());
-			m.visit(model);
 			currentScore = scoreModel(model);
+			m.visit(model);
 			if(currentScore > maxScore){
 				maxScore = currentScore;
 				bestMove = m;
@@ -69,13 +67,11 @@ public class dropTable$420 implements PlayerFactory {
 	private Pair<Double, Move> minmax(ScotlandYardAIModel node, int depth, boolean maximizer, double alpha, double beta){
 		Pair<Double, Move> value, bestValue;
 
-		System.out.println(node.getCurrentPlayer().location());
-
 		if(depth == maxDepth)
 			return chooseMove(node);
 
 		if(maximizer){
-			bestValue = new Pair<>(Double.MIN_VALUE, null);
+			bestValue = new Pair<>(-100000.0, null);
 			ScotlandYardAIModel model;
 
 			for(Move m : node.getValidMovesForPlayer(node.getCurrentPlayer())){
@@ -83,9 +79,9 @@ public class dropTable$420 implements PlayerFactory {
 				m.visit(model.getCurrentPlayer());
 				m.visit(model);
 
-				value = minmax(model, depth + 1, false, alpha, beta);
-				if(value.getKey() > bestValue.getKey())
-					bestValue = value;
+				value = minmax(model, depth, false, alpha, beta);
+				if(value.getKey() > bestValue.getKey() || bestValue.getValue() == null)
+					bestValue = new Pair<>(value.getKey(), m);
 
 				alpha = Double.max(alpha, bestValue.getKey());
 
@@ -95,24 +91,29 @@ public class dropTable$420 implements PlayerFactory {
 			return bestValue;
 		}
 		else{
-			bestValue = new Pair<>(Double.MAX_VALUE, null);
-			ScotlandYardAIModel model;
+			bestValue = new Pair<>(100000.0, null);
+			ScotlandYardAIModel model = node;
 
 			for(Move m : node.getValidMovesForPlayer(node.getCurrentPlayer())){
 				model = new ScotlandYardAIModel(node);
 				m.visit(model.getCurrentPlayer());
+
+				double score = scoreModel(model);
 				m.visit(model);
 
-				value = minmax(model, depth + 1, true, alpha, beta);
-				if(value.getKey() < bestValue.getKey())
-					bestValue = value;
+				if(score < bestValue.getKey() || bestValue.getValue() == null)
+					bestValue = new Pair<>(score, m);
 
 				alpha = Double.min(alpha, bestValue.getKey());
-
-				if(beta <= alpha)
-					break;
 			}
-			return bestValue;
+
+			model = new ScotlandYardAIModel(node);
+			bestValue.getValue().visit(model.getCurrentPlayer());
+			bestValue.getValue().visit(model);
+
+			if(model.getCurrentPlayerNumber() == 0)
+				return  minmax(model, depth + 1, true, alpha, beta);
+			else return minmax(model, depth, false, alpha, beta);
 		}
 	}
 
@@ -125,7 +126,7 @@ public class dropTable$420 implements PlayerFactory {
 		}
 		else cache = new Cache();
 
-		return Collections.emptyList();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -139,7 +140,8 @@ public class dropTable$420 implements PlayerFactory {
 
 		@Override
 		public void makeMove(ScotlandYardView view, int location, Set<Move> moves, Consumer<Move> callback) {
-			callback.accept(minmax(new ScotlandYardAIModel(view, location), 0, true, Double.MIN_VALUE, Double.MAX_VALUE).getValue());
+			Pair<Double, Move> m = minmax(new ScotlandYardAIModel(view, location), 0, true, -100000.0, 100000.0);
+			callback.accept(m.getValue());
 		}
 	}
 }

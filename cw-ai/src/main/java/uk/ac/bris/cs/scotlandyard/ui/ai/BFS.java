@@ -29,6 +29,7 @@ public class BFS{
                     p.tickets().getOrDefault(Ticket.UNDERGROUND, 0)
                     )));
 
+            distance[p.location()] = queue.getFirst().getValue();
 
             while(queue.size() != 0){
 
