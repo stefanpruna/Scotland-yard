@@ -411,7 +411,7 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
         // MrX win
         if(detectivesStuck || (round == rounds.size() && player == 0))
             set.add(Colour.BLACK);
-            // Detectives win
+        // Detectives win
         else if(getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK)) || captured)
             for(ScotlandYardPlayer p : players)
                 if(p.isDetective())
@@ -422,6 +422,7 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour){
+        // Gets player object, then returns location
         for(ScotlandYardPlayer p : players){
             if(p.colour() == colour){
                 if(p.colour() == Colour.BLACK && (getCurrentRound() == 0 || !rounds.get(getCurrentRound() - 1)))
@@ -434,6 +435,7 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 
     @Override
     public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket){
+        // Gets player object, then returns tickets
         for(ScotlandYardPlayer p : players){
             if(p.colour() == colour)
                 return Optional.of(p.tickets().get(ticket));
