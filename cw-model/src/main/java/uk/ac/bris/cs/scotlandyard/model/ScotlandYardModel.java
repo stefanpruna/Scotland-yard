@@ -32,6 +32,7 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
         if(graph.isEmpty()) throw new IllegalArgumentException("Graph is empty");
 
         // mrX colour check.
+
         if(mrX.colour != Colour.BLACK) throw new IllegalArgumentException("Mr. X should be black");
 
         // Adding all players to a list.
@@ -330,7 +331,6 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
         //Remove the first ticket, update location for first move in the double move.
         players.get(0).removeTicket(move.firstMove().ticket());
         players.get(0).location(move.firstMove().destination());
-
         // Increment rounds if there are still rounds to be played.
         if(round < rounds.size())
             round++;
@@ -344,7 +344,6 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
         // Update mr.X's location, if round is not hidden.
         if(rounds.get(round - 1))
             lastBlackLocation = players.get(0).location();
-
         //Remove the first ticket, update location for second move in the double move.
         players.get(0).removeTicket(move.secondMove().ticket());
         players.get(0).location(move.finalDestination());
