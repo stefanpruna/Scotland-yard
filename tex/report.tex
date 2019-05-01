@@ -1,0 +1,30 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage[section]{placeins}
+\usepackage{placeins}
+\usepackage{graphicx}
+\usepackage{subfig}
+
+\typearea{14}
+
+\begin{document}
+
+\title{Scotland Yard}
+\author{Razvan Dan David, Stefan Pruna}
+\maketitle
+
+\section{Model}
+The first part of the coursework was \textit{cw-model}. Our task was to pass all tests by completing the implementation of the ScotlandYardModel class. This involved implementing the constructor, the \textit{ScotlandYardGame}, \textit{Consumer} and the \textit{MoveVisitor} interfaces, but also some auxiliary methods.
+
+\subsection*{The constructor}
+The constructor for the \textit{ScotlandYardModel} class ensures that all data that was passed in as arguments is valid and can be processed and copied into the class data structures. There are many types of validity checks, including chekcs for null pointers, valid colour and locations and appropriate tickets. \textit{PlayerConfigurations} are converted to \textit{ScotlandYardPlayers} and added to a list of players that is used later on in the class.
+
+\subsection*{The ScotlandYardGame interface}
+There are many functions that we implemented in order for our class to implement the \textit{ScotlandYardGame} interface, but two that stand out as being very important for the gameplay are \textit{startRotate} and \textit{isGameOver} (or \textit{getWinningPlayer})
+
+
+\end{document}
