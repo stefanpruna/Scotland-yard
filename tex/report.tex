@@ -33,6 +33,13 @@ In order to correctly implement \textit{startRotate}, we needed to generate a co
 Players are given a collection of valid moves that they can make, and a method to call when they decided which move to make. This method, \textit{accept},  is included in the \textit{Consumer} interface, which we implemented. It takes a generic \textit{Move} object as argument, checks if the selected move is valid and executes game logic. In order to get the type of move the player selected and to be able to execute game logic, we made use of the visitor pattern by implementing the \textit{MoveVisitor} interface. This meant creating three overloaded methods in which we had access to the type of move used by the player. In these three methods, we removed the used tickets, added tickets to mr. X, moved players, incremented rounds and current player turns, and notified spectators.
 
 \section{AI}
+The second part of the coursework was \textit{cw-ai}. Our task was to implement an artificial intelligence that can choose the best move for mr. X. We had to create a scoring function and implement the MinMax algorithm, but also come up with creative ideas to make our program more efficient.
+
+\subsection*{The scoring function}
+We decided to use three scoring criteria involving the available moves of mr. X, the average distance to the detectives and the minimum distance to them. We also normalized these such that each of the three would range between 0 and 100. After some trial end error, we ended up combining these threee scores as follows: 70\% of the final score is the minimum distance score, 20\% is the available move score, and 10\% is the average distance score.
+
+
+
 
 
 \end{document}
