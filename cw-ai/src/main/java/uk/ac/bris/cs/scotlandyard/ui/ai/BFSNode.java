@@ -2,30 +2,48 @@ package uk.ac.bris.cs.scotlandyard.ui.ai;
 
 import uk.ac.bris.cs.scotlandyard.model.Ticket;
 
-public class BFSNode{
+// Class that stores all needed information for a Breadth First Search.
+class BFSNode{
 
     private byte distance = 0;
     private int taxi = 0, bus = 0, underground = 0;
     private boolean visited = false;
 
-    public BFSNode(){
+    /**
+     * Constructor for default node
+     */
+    BFSNode(){
 
     }
 
-    public BFSNode(int taxi, int bus, int underground){
+    /**
+     * Constructor for initial node
+     *
+     * @param taxi number of taxi tickets
+     * @param bus number of bus tickets
+     * @param underground number of underground tickets
+     */
+    BFSNode(int taxi, int bus, int underground){
         visited = true;
         this.taxi = taxi;
         this.bus = bus;
         this.underground = underground;
     }
 
-    public BFSNode(BFSNode oldNode, Ticket transport){
+    /**
+     * Constructor for reached node
+     *
+     * @param oldNode the node from which the player is coming from
+     * @param transport the transportation method (ticket) used by player to reach current node
+     */
+    BFSNode(BFSNode oldNode, Ticket transport){
         visited = true;
         distance = (byte) (oldNode.distance() + 1);
         taxi = oldNode.getTickets(Ticket.TAXI);
         bus = oldNode.getTickets(Ticket.BUS);
         underground = oldNode.getTickets(Ticket.UNDERGROUND);
 
+        // Delete used ticket from configuration
         switch(transport){
             case TAXI:
                 taxi--;
@@ -41,11 +59,20 @@ public class BFSNode{
         }
     }
 
-    public boolean visited(){
+    /**
+     *
+     * @return if the node has been visited by player
+     */
+    boolean visited(){
         return visited;
     }
 
-    public int getTickets(Ticket t){
+    /**
+     *
+     * @param t the ticket type
+     * @return returns the number of tickets of type t remaining
+     */
+    int getTickets(Ticket t){
         switch(t){
             case TAXI:
                 return taxi;
@@ -58,7 +85,11 @@ public class BFSNode{
         }
     }
 
-    public int distance(){
+    /**
+     *
+     * @return the distance from the start node to this
+     */
+    int distance(){
         return distance;
     }
 

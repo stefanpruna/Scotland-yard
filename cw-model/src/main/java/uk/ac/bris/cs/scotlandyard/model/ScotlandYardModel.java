@@ -219,7 +219,6 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
         if(p == null)
             throw new NullPointerException("Player is null");
 
-
         // Make a HashSet for all valid simple moves.
         HashSet<TicketMove> simpleMoves = getMovesFromPlayerLocation(p);
 
@@ -287,7 +286,6 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
 
     public void visit(TicketMove move){
         // Get the player from the move's colour. Remove the used ticket and update location.
-
         ScotlandYardPlayer p = getPlayerFromMove(move);
         if(p!= null){
             p.removeTicket(move.ticket());
@@ -312,7 +310,6 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move>, Move
     }
 
     public void visit(DoubleMove move){
-
         // Generate new moves that are reported to the spectators. These moves conceals mr.X's location, if required.
         TicketMove first = move.firstMove(), second = move.secondMove();
         if(!rounds.get(round))

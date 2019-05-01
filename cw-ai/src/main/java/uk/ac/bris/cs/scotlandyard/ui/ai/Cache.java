@@ -1,9 +1,6 @@
 package uk.ac.bris.cs.scotlandyard.ui.ai;
 
-import uk.ac.bris.cs.gamekit.graph.Graph;
-import uk.ac.bris.cs.scotlandyard.model.Colour;
 import uk.ac.bris.cs.scotlandyard.model.Ticket;
-import uk.ac.bris.cs.scotlandyard.model.Transport;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+// Class that caches the distance and the valid moves from all nodes (and to all nodes).
 public class Cache{
 
     final private File distanceFile = new File("distance.dat");
@@ -21,11 +19,16 @@ public class Cache{
     private byte[][][][][] distance = new byte[200][200][12][9][5];
     private int[][][][][][] validMoves = new int[200][3][3][3][2][3];
 
-    public Cache(){
+    /**
+     * Main constructor for the Cache class
+     */
+    Cache(){
+        // If the files exist, load the contents into memory as matrices.
         if(distanceFile.exists() && validMoveFile.exists()){
             try{
                 FileInputStream in = new FileInputStream(distanceFile);
                 byte[] tempDist = new byte[200 * 200 * 12 * 9 * 5];
+                // Reads the file as a byte array, then stores it as a byte matrix.
                 in.read(tempDist);
                 int i = 0;
                 for(int start = 1; start < 200; start++)
@@ -37,6 +40,7 @@ public class Cache{
 
                 in = new FileInputStream(validMoveFile);
                 byte[] tempMoves = new byte[4 * 200 * 162];
+                // Reads the file as a byte array, then stores it as an int matrix.
                 in.read(tempMoves);
                 i = 0;
 
@@ -46,9 +50,10 @@ public class Cache{
                             for(int underground = 0; underground < 3; underground++)
                                 for(int doublet = 0; doublet < 2; doublet++)
                                     for(int secret = 0; secret < 3; secret++){
+                                        // Compute the int from 4 consecutive bytes in the byte array
                                         for(int b = 0; b < 4; b++)
                                             validMoves[node][taxi][bus][underground][doublet][secret] =
-                                                    (validMoves[node][taxi][bus][underground][doublet][secret] << 8) | (tempMoves[b + i] & 0xFF); // muie java
+                                                    (validMoves[node][taxi][bus][underground][doublet][secret] << 8) | (tempMoves[b + i] & 0xFF);
                                         i += 4;
                                     }
             }
@@ -58,15 +63,20 @@ public class Cache{
         }
     }
 
-    public Cache(ScotlandYardAIModel model){
-        // Generates distances from everywhere with every config
+    /**
+     * Constructor for when the files are missing
+     *
+     * @param model the model used to generate the distances
+     */
+    Cache(ScotlandYardAIModel model){
+        // Generates distances from everywhere with every configuration.
         List<ScotlandYardAIPlayer> allPossiblePlayers = new ArrayList<>();
         for(int start = 1; start < 200; start++)
             for(int taxi = 0; taxi < 12; taxi++)
                 for(int bus = 0; bus < 9; bus++)
                     for(int underground = 0; underground < 5; underground++)
                         allPossiblePlayers.add(new ScotlandYardAIPlayer(start, taxi, bus, underground));
-
+        // Creates a BFS object to generate all distances, then saves them to cache
         BFS allBfs = new BFS(model.getGraph(), allPossiblePlayers);
         for(int start = 1; start < 200; start++)
             for(int to = 1; to < 200; to++)
@@ -88,7 +98,10 @@ public class Cache{
                                         ).size();
     }
 
-    public void writeToFile(){
+    /**
+     *  Writes the matrices to file
+     */
+    void writeToFile(){
         try{
             OutputStream o = new FileOutputStream(distanceFile);
             for(int start = 1; start < 200; start++)
@@ -113,7 +126,14 @@ public class Cache{
         }
     }
 
-    public int getDistance(int from, int to, HashMap<Ticket, Integer> ticketMap){
+    /**
+     *
+     * @param from start node
+     * @param to end node
+     * @param ticketMap player ticket map
+     * @return returns the distance from the start node to the end node with the given ticket configuration to start
+     */
+    int getDistance(int from, int to, HashMap<Ticket, Integer> ticketMap){
         int taxi = ticketMap.getOrDefault(Ticket.TAXI, 0),
             bus = ticketMap.getOrDefault(Ticket.BUS, 0),
             underground = ticketMap.getOrDefault(Ticket.UNDERGROUND, 0);
@@ -124,6 +144,12 @@ public class Cache{
         return distance[from][to][taxi][bus][underground];
     }
 
+    /**
+     *
+     * @param node the node
+     * @param ticketMap the available tickets
+     * @return returns the number of valid moves from certain node with given ticket configuration
+     */
     public int getValidMoves(int node, HashMap<Ticket, Integer> ticketMap){
         int taxi = ticketMap.getOrDefault(Ticket.TAXI, 0),
             bus = ticketMap.getOrDefault(Ticket.BUS, 0),
