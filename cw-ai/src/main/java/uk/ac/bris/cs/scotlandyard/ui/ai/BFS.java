@@ -10,10 +10,10 @@ import uk.ac.bris.cs.scotlandyard.model.Transport;
 import java.util.LinkedList;
 import java.util.List;
 
-public class BFS{
+class BFS{
     private BFSNode[][][][][] distances = new BFSNode[200][200][12][9][5];
 
-    public BFS(Graph<Integer, Transport> graph, List<ScotlandYardAIPlayer> players){
+    BFS(Graph<Integer, Transport> graph, List<ScotlandYardAIPlayer> players){
 
         for(ScotlandYardAIPlayer p : players){
 
@@ -23,11 +23,11 @@ public class BFS{
 
             LinkedList<Pair<Integer, BFSNode>> queue = new LinkedList<>();
 
-            queue.add(new Pair<Integer, BFSNode>(p.location(), new BFSNode(
+            queue.add(new Pair<>(p.location(), new BFSNode(
                     p.tickets().getOrDefault(Ticket.TAXI, 0),
                     p.tickets().getOrDefault(Ticket.BUS, 0),
                     p.tickets().getOrDefault(Ticket.UNDERGROUND, 0)
-                    )));
+            )));
 
             distance[p.location()] = queue.getFirst().getValue();
 
@@ -40,13 +40,13 @@ public class BFS{
                 for(Edge<Integer, Transport> e : graph.getEdgesFrom(node)){
                     if((!distance[e.destination().value()].visited() ||
                             distance[e.destination().value()].distance() == frontQueue.getValue().distance() + 1)
-                        && frontQueue.getValue().getTickets(Ticket.fromTransport(e.data())) > 0
+                            && frontQueue.getValue().getTickets(Ticket.fromTransport(e.data())) > 0
                     ){
 
                         distance[e.destination().value()] = new BFSNode(frontQueue.getValue(), Ticket.fromTransport(e.data()));
-                        queue.addLast(new Pair<Integer, BFSNode>(
-                                            e.destination().value(),
-                                             distance[e.destination().value()])
+                        queue.addLast(new Pair<>(
+                                e.destination().value(),
+                                distance[e.destination().value()])
                         );
                     }
                 }
@@ -59,7 +59,7 @@ public class BFS{
         }
     }
 
-    public BFSNode[][][][][] getDistances(){
+    BFSNode[][][][][] getDistances(){
         return distances;
     }
 }

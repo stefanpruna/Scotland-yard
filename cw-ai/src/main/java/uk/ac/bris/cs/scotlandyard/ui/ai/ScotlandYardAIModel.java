@@ -8,26 +8,26 @@ import java.util.*;
 
 class ScotlandYardAIModel implements  MoveVisitor{
 
-    private int round = 0;
+    private int round;
     private int currentPlayerNumber = 0;
-    private List<ScotlandYardAIPlayer> players = new ArrayList<ScotlandYardAIPlayer>();
+    private List<ScotlandYardAIPlayer> players = new ArrayList<>();
 
     // Immutable:
     private Graph<Integer, Transport> graph;
     private List<Boolean> rounds;
 
-    public ScotlandYardAIModel(ScotlandYardAIModel model){
+    ScotlandYardAIModel(ScotlandYardAIModel model){
         round = model.getCurrentRound();
         currentPlayerNumber = model.getCurrentPlayerNumber();
 
         for(ScotlandYardAIPlayer p : model.getPlayers())
             players.add(new ScotlandYardAIPlayer(p));
 
-        graph = model.getGraph();
+        graph = model.graph;
         rounds = model.getRounds();
     }
 
-    public ScotlandYardAIModel(ScotlandYardView view){
+    ScotlandYardAIModel(ScotlandYardView view, int location){
         graph = view.getGraph();
         rounds = view.getRounds();
         round = view.getCurrentRound();
@@ -41,57 +41,31 @@ class ScotlandYardAIModel implements  MoveVisitor{
         for(Colour c : view.getPlayers()){
             HashMap<Ticket, Integer> ticketMap = new HashMap<>();
 
-            ticketMap.put(Ticket.SECRET, view.getPlayerTickets(c, Ticket.SECRET).get());
-            ticketMap.put(Ticket.DOUBLE, view.getPlayerTickets(c, Ticket.DOUBLE).get());
-            ticketMap.put(Ticket.TAXI, view.getPlayerTickets(c, Ticket.TAXI).get());
-            ticketMap.put(Ticket.BUS, view.getPlayerTickets(c, Ticket.BUS).get());
-            ticketMap.put(Ticket.UNDERGROUND, view.getPlayerTickets(c, Ticket.UNDERGROUND).get());
+            ticketMap.put(Ticket.SECRET, view.getPlayerTickets(c, Ticket.SECRET).orElse(0));
+            ticketMap.put(Ticket.DOUBLE, view.getPlayerTickets(c, Ticket.DOUBLE).orElse(0));
+            ticketMap.put(Ticket.TAXI, view.getPlayerTickets(c, Ticket.TAXI).orElse(0));
+            ticketMap.put(Ticket.BUS, view.getPlayerTickets(c, Ticket.BUS).orElse(0));
+            ticketMap.put(Ticket.UNDERGROUND, view.getPlayerTickets(c, Ticket.UNDERGROUND).orElse(0));
 
-            players.add(new ScotlandYardAIPlayer(c, view.getPlayerLocation(c).get(), ticketMap));
-        }
-    }
-
-    public ScotlandYardAIModel(ScotlandYardView view, int location){
-        graph = view.getGraph();
-        rounds = view.getRounds();
-        round = view.getCurrentRound();
-
-        for(Colour c : view.getPlayers()){
-            if(c == view.getCurrentPlayer())
-                break;
-            currentPlayerNumber++;
-        }
-
-        for(Colour c : view.getPlayers()){
-            HashMap<Ticket, Integer> ticketMap = new HashMap<>();
-
-            ticketMap.put(Ticket.SECRET, view.getPlayerTickets(c, Ticket.SECRET).get());
-            ticketMap.put(Ticket.DOUBLE, view.getPlayerTickets(c, Ticket.DOUBLE).get());
-            ticketMap.put(Ticket.TAXI, view.getPlayerTickets(c, Ticket.TAXI).get());
-            ticketMap.put(Ticket.BUS, view.getPlayerTickets(c, Ticket.BUS).get());
-            ticketMap.put(Ticket.UNDERGROUND, view.getPlayerTickets(c, Ticket.UNDERGROUND).get());
-
-            if(c != Colour.BLACK)
-                players.add(new ScotlandYardAIPlayer(c, view.getPlayerLocation(c).get(), ticketMap));
+            if(c != Colour.BLACK || location == -1)
+                players.add(new ScotlandYardAIPlayer(c, view.getPlayerLocation(c).orElse(0), ticketMap));
             else players.add(new ScotlandYardAIPlayer(c, location, ticketMap));
         }
     }
 
 
-    public void incrementRound(){
+    private void incrementRound(){
         round += 1;
     }
 
-    public void incrementCurrentPlayer(){
+    private void incrementCurrentPlayer(){
         currentPlayerNumber = (currentPlayerNumber + 1) % players.size();
     }
 
-    public HashSet<Move> getValidMovesForPlayer(ScotlandYardAIPlayer p){
-        HashSet<Move> moves = new HashSet<>();
-
-        // Make a HashSet for all valid simple moves
+    HashSet<Move> getValidMovesForPlayer(ScotlandYardAIPlayer p){
+       // Make a HashSet for all valid simple moves
         HashSet<TicketMove> simpleMoves = getMovesFromPlayerLocation(p);
-        moves.addAll(simpleMoves);
+        HashSet<Move> moves = new HashSet<>(simpleMoves);
 
         // If player has a double ticket, add all double moves
         if(p.tickets().getOrDefault(Ticket.DOUBLE, 0) > 0 && round + 1 < rounds.size())
@@ -103,10 +77,10 @@ class ScotlandYardAIModel implements  MoveVisitor{
         return moves;
     }
 
-    HashSet<TicketMove> getMovesFromPlayerLocation(ScotlandYardAIPlayer p){
+    private HashSet<TicketMove> getMovesFromPlayerLocation(ScotlandYardAIPlayer p){
         HashSet<TicketMove> moves = new HashSet<>();
         for(Edge<Integer, Transport> e : getGraph().getEdgesFrom(getGraph().getNode(p.location()))){
-            if(!isLocationBusy(p.colour(), e.destination().value())){
+            if(isLocationFree(p.colour(), e.destination().value())){
                 // Checks for normal ticket moves
                 if(p.tickets().get(Ticket.fromTransport(e.data())) > 0)
                     moves.add(new TicketMove(p.colour(), Ticket.fromTransport(e.data()), e.destination().value()));
@@ -118,11 +92,11 @@ class ScotlandYardAIModel implements  MoveVisitor{
         return moves;
     }
 
-    HashSet<Move> getDoubleMovesFromPlayerLocation(Set<TicketMove> simpleMoves, ScotlandYardAIPlayer p){
+    private HashSet<Move> getDoubleMovesFromPlayerLocation(Set<TicketMove> simpleMoves, ScotlandYardAIPlayer p){
         HashSet<Move> moves = new HashSet<>();
         for(TicketMove m : simpleMoves){
             for(Edge<Integer, Transport> e : getGraph().getEdgesFrom(getGraph().getNode(m.destination()))){
-                if(!isLocationBusy(p.colour(), e.destination().value())){
+                if(isLocationFree(p.colour(), e.destination().value())){
                     int c = 0;
                     // If using the same ticket, player must have at least 2
                     if(Ticket.fromTransport(e.data()) == m.ticket())
@@ -139,98 +113,35 @@ class ScotlandYardAIModel implements  MoveVisitor{
         return moves;
     }
 
-    public List<ScotlandYardAIPlayer> getPlayers(){
+    List<ScotlandYardAIPlayer> getPlayers(){
         return players;
     }
 
-    public Set<Colour> getWinningPlayers(){
-        HashSet<Colour> set = new HashSet<>();
-        boolean detectivesStuck = true, captured = false;
-
-        // Check for detectives being stuck
-        for(ScotlandYardAIPlayer p : players)
-            if(p.colour() != Colour.BLACK && !getValidMovesForPlayer(p).contains(new PassMove(p.colour())))
-                detectivesStuck = false;
-
-        // Check for MrX capture
-        for(ScotlandYardAIPlayer p : players)
-            if(p.colour() != Colour.BLACK && p.location() == players.get(0).location())
-                captured = true;
-
-        // MrX win
-        if(detectivesStuck || (round == rounds.size() && currentPlayerNumber == 0))
-            set.add(Colour.BLACK);
-        // Detectives win
-        else if(getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK)) || captured)
-            for(ScotlandYardAIPlayer p : players)
-                if(p.colour() != Colour.BLACK)
-                    set.add(p.colour());
-
-        return Collections.unmodifiableSet(set);
-    }
-
-    public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket) {
-        for(ScotlandYardAIPlayer p : players){
-            if(p.colour() == colour)
-                return Optional.of(p.tickets().get(ticket));
-        }
-        return Optional.empty();
-    }
-
-    public boolean isGameOver(){
-        // Last round
-        if(round == rounds.size() && currentPlayerNumber == 0)
-            return true;
-
-        // MrX Cannot move
-        if(getCurrentPlayerColour() == Colour.BLACK && getValidMovesForPlayer(players.get(0)).contains(new PassMove(Colour.BLACK)))
-            return true;
-
-        // Detectives stuck
-        boolean detectivesStuck = true;
-        for(ScotlandYardAIPlayer p : players)
-            if(p.colour() != Colour.BLACK && !getValidMovesForPlayer(p).contains(new PassMove(p.colour())))
-                detectivesStuck = false;
-        if(detectivesStuck)
-            return true;
-
-        // Captured
-        for(ScotlandYardAIPlayer p : players)
-            if(p.colour() != Colour.BLACK && p.colour() == players.get(0).colour())
-                return true;
-
-        return false;
-    }
-
-    public Colour getCurrentPlayerColour(){
-        return players.get(currentPlayerNumber).colour();
-    }
-    
-    public ScotlandYardAIPlayer getCurrentPlayer(){
+    ScotlandYardAIPlayer getCurrentPlayer(){
         return players.get(currentPlayerNumber);
     }
 
-    public int getCurrentPlayerNumber(){
+    int getCurrentPlayerNumber(){
         return currentPlayerNumber;
     }
 
-    public int getCurrentRound(){
+    private int getCurrentRound(){
         return round;
     }
 
-    public List<Boolean> getRounds() {
+    private List<Boolean> getRounds() {
         return rounds;
     }
 
-    public Graph<Integer, Transport> getGraph() {
+    Graph<Integer, Transport> getGraph() {
         return graph;
     }
 
-    boolean isLocationBusy(Colour c, Integer l){
+    private boolean isLocationFree(Colour c, Integer l){
         for(ScotlandYardAIPlayer p : players)
             if(p.location() == l && p.colour() != c && p.colour() != Colour.BLACK)
-                return true;
-        return false;
+                return false;
+        return true;
     }
 
     @Override

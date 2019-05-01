@@ -9,7 +9,7 @@ import uk.ac.bris.cs.scotlandyard.ai.PlayerFactory;
 import uk.ac.bris.cs.scotlandyard.model.*;
 
 @ManagedAI("Mr. dropTable$420")
-public class dropTable$420 implements PlayerFactory {
+class dropTable$420 implements PlayerFactory {
 
 	private static final boolean generateFile = false;
 	private static final int maxDepth = 2;
@@ -17,7 +17,7 @@ public class dropTable$420 implements PlayerFactory {
 	private Cache cache = null;
 
 	private double scoreModel(ScotlandYardAIModel model){
-		double availableMoveScore = 0, distanceScoreAvg = 0, distanceScoreMin = 0;
+		double availableMoveScore, distanceScoreAvg, distanceScoreMin;
 
 		// Valid moves scoreModel
 		// Normalized to a maximum of 100. 364 is the maximum from the valid moves table.
@@ -40,9 +40,7 @@ public class dropTable$420 implements PlayerFactory {
 		distanceScoreAvg = avgDistance / 16 * 100;
 		distanceScoreMin = 800 / (minDistance + 1);
 
-		double score = availableMoveScore * 20 + distanceScoreAvg * 20 - distanceScoreMin * 60;
-
-		return score;
+		return availableMoveScore * 20 + distanceScoreAvg * 10 - distanceScoreMin * 70;
 	}
 
 	private Pair<Double, Move> chooseMove(ScotlandYardAIModel node){
@@ -92,7 +90,7 @@ public class dropTable$420 implements PlayerFactory {
 		}
 		else{
 			bestValue = new Pair<>(100000.0, null);
-			ScotlandYardAIModel model = node;
+			ScotlandYardAIModel model;
 
 			for(Move m : node.getValidMovesForPlayer(node.getCurrentPlayer())){
 				model = new ScotlandYardAIModel(node);
@@ -119,7 +117,7 @@ public class dropTable$420 implements PlayerFactory {
 
 	@Override
 	public List<Spectator> createSpectators(ScotlandYardView view){
-		ScotlandYardAIModel model = new ScotlandYardAIModel(view);
+		ScotlandYardAIModel model = new ScotlandYardAIModel(view, -1);
 		if(generateFile){
 			cache = new Cache(model);
 			cache.writeToFile();
@@ -135,9 +133,6 @@ public class dropTable$420 implements PlayerFactory {
 	}
 
 	private class MyPlayer implements Player {
-
-		private final Random random = new Random();
-
 		@Override
 		public void makeMove(ScotlandYardView view, int location, Set<Move> moves, Consumer<Move> callback) {
 			Pair<Double, Move> m = minmax(new ScotlandYardAIModel(view, location), 0, true, -100000.0, 100000.0);
