@@ -1,8 +1,4 @@
----
-author:
-- 'Razvan Dan David, Stefan Pruna'
-title: Scotland Yard
----
+# Scotland Yard
 
 Model
 =====
